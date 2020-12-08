@@ -1,0 +1,22 @@
+\section{Source code structure}
+In the following section we will describe how the structure of our program will be. The program will be written in the language C, which means we can split our programs directory into separate C source files (\verb|.c|), and link them together using header files (\verb|.h|). In each of the following subsections, we will describe each file, both C source files, and header files.
+
+\subsection{main.c}
+The \verb|main.c| file will acts as our main file, where we use the functions and data types from the other files to solve our problem and make a work schedule in the right format. This file is the only one to include header files for all of the other files in our program, since it is the main file and needs the attributions from all of the other files.
+
+\subsection{types.c/.h}
+The \verb|types.c| will be containing the structs and data types that we will be using in our program. This file will be used as a header in most, if not all, other files.
+
+\subsection{input.c/.h}
+The \verb|input.c| file will contain the code required to scan the initial work schedule (Figure \ref{fig:Schedule no fix}), and insert it into the data types made in \verb|types.c|, which means it needs to include a header file, pointing towards \verb|types.c|.
+
+\subsection{outputwriter.c/.h}
+The \verb|outputwriter.c| file will contain the code that writes all of our data, processed in \verb|main.c|, out to a "Comma Separated Varia
+ble" file, in the right format, as seen in Figure \ref{fig:Schedule formated}.
+
+\subsection{gen.c/.h}
+The \verb|gen.c| file will be used to generate most, if not all of the schedule. This file will also be dependant on the \verb|types.c| as a header file.
+
+\subsection{Illustration}
+All of the dependencies can be explained in an illustration
+

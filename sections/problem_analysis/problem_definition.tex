@@ -1,0 +1,10 @@
+\section{Problem Definition}
+
+Based on our analysis, we can conclude that different parties have different interests in our project. They all want a fair, efficient, and predictable program, that reliably creates a work schedule. We have chosen to focus on the work scheduling at \siemens for the shift teams, where we will make a usable work schedule (figure \ref{fig:Schedule formated}) from a proposed schedule (figure \ref{fig:Schedule no fix}). Based on this we have come to the following problem definition:
+
+\begin{quote}
+    How can we create a program that automates the process of taking a proposed time table  from \siemens and making it into a proper work schedule, with the goal of minimizing work hours spent making it?
+\end{quote}
+
+We want the program to reliably create a work schedule, that follows the requirements of the union and local agreements. This means it shall be able to calculate the different average working hours, and accumulated work hours. It should also be able to place the shifts on valid days, such that Sundays are avoided. Out from the information of the accumulated working hours the program should be able to determine how many shifts needs to be added or removed, and give potential shifts to remove or add to make the production still run smoothly. The program should also create the work schedule fast and reliably, making sure that as little time as possible is spend on creating the actual work schedule. Furthermore it should be able to divide work on holidays equally between the teams, as to make sure that no one team is working more on undesirable shifts than the other teams.
+

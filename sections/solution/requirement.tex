@@ -1,0 +1,33 @@
+\section{Requirements}
+In this section we will be outlining the requirements of our program. We will be separating the various requirements by priority. Some of our requirements are significantly more important than others, and the ones of lower priority may not end up being implemented if the available time proves to be insufficient.
+
+Our programs requirements are listed as following (each of the requirements is marked with a number representing its priority):
+\begin{itemize}
+    \reqItem[1]{Input/Output}{Since we need to import the data from an Excel document, we need to figure how exactly to do this. Since the Excel format is quite complicated we want to take a simpler approach. As such we want to use a \textit{semicolon separated value} format, which Excel has native export and import support for.}
+    
+    \item[] \textbf{Union and local agreements:} The program needs be able to create a schedule that upholds the union and local agreements, in regards to working hours and shift placement.
+    
+    \item[] \textbf{SH-days:} The program needs to take holidays (SH-days) into account.
+    
+    \item[] \textbf{Work hours:} The program should ensure that each of the teams do not exceed the expected hours or have an insufficient amount of hours, and remove or add shifts accordingly. Here public holidays and Saturdays should be prioritised over other days, if a shift is able to be removed.
+    
+    The program must accumulate the work hours and include them with the resulting schedule.
+    
+    \reqItem{\primo teams}{Initially we will be focusing on scheduling for the \primo teams as our first priority. This is mainly just simplify the initial development process.}
+    
+    \reqItem{Days in a year}{Since the year does not start at the same weekday each year we have a different number of weekends each year. Our program should be able to allocate memory according to the number of days, weeks and weekends, in that specific year.}
+    
+    \item[\textbf{2}] \textbf{Ultimo teams:} We want the program to be able to also place the Ultimo teams in the schedule.
+    
+    \item[] \textbf{Leap years:} The program should be able to change the schedule accordingly if the year is a leap year.
+    
+    \item[\textbf{3}] \textbf{Schedule criteria:} In the case of a proposed schedule being rejected we would need to generate a new one that can take the needed adjustments into account. In this case we would have to generate a new schedule, and to do that we need to define a format and method by which the end user can supply adjustments to the schedule.
+    
+    \item[\textbf{4}] \textbf{Option flags:} There can be the option to flag your output file, for example give it a specific name instead of the programmed standard name.
+    
+    \item[] \textbf{GUI:} The program should have a graphical user interface.
+    
+    \reqItem[5]{Excel file}{The program should output an actual \texttt{.xlsx} file instead of an \texttt{.csv} file that needs to be imported. This way it will be more user friendly and there will not be any need for a pre-made template that already has the correct colors.}
+\end{itemize}
+
+

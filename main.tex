@@ -1,0 +1,73 @@
+\input{setup/preamble}
+\input{setup/macros}
+\addbibresource{refs.bib}
+
+\SetupReport{
+    title=Automated Work Schedule for Siemens Gamesa,
+    subtitle=A small program in C,
+    theme=Work schedules,
+    study=Computer Science,
+    group=A.306,
+    period=Fall Semester 2020,
+    supervisor=Lam Nguyen,
+    authors={
+    Benjamin C. Bennetzen, Frederik F. K. Rasmussen,
+    Jonas M. T. Kjellerup, Marcus T. Jespersgaard,
+    Nikolaj R. Kristensen, Rasmus Hooge, Thomas K. Lohse},
+    type=Semester Project
+}
+
+\begin{document}
+
+\pagestyle{empty} %disable headers and footers
+\pagenumbering{roman} %use roman page numbering in the frontmatter
+\include{sections/frontmatter/frontpage}
+\include{sections/frontmatter/titlepage}
+
+\pagestyle{fancy} %enable headers and footers again
+\pdfbookmark[0]{Contents}{label:contents}
+\tableofcontents
+
+\setlength{\parskip}{0.5\baselineskip plus2pt minus2pt}
+\setlength\parindent{0pt} % uncomment to remove paragraph indents globally.
+
+%\listoftodos
+{\setlength\parindent{0pt} % removes the paragraph indentation for the preface
+\include{sections/frontmatter/preface}}
+\cleardoublepage
+
+\setlength{\parskip}{0.5\baselineskip plus2pt minus2pt}
+\pagenumbering{arabic} %use arabic page numbering
+\include{sections/introduction}
+% Problem analysis
+\include{sections/problem_analysis/intro}
+\include{sections/problem_analysis/union_agreements}
+\include{sections/problem_analysis/fairness}
+\include{sections/problem_analysis/interested_parties}
+\include{sections/problem_analysis/existing_solutions}
+\include{sections/problem_analysis/datadesc} %temporary tex
+\include{sections/problem_analysis/problem_definition}
+% Solution/development
+\include{sections/solution/intro}
+\include{sections/solution/requirement}
+\include{sections/solution/flow}
+\include{sections/solution/specs}
+\include{sections/solution/struct}
+\include{sections/solution/implementation}
+\include{sections/solution/testing}
+\include{sections/solution/benchmark}
+
+% Conclusion
+\include{sections/conclusion}
+% Process Analysis
+\include{sections/Process_analysis/intro}
+
+\printbibliography[heading=bibintoc, title=References]
+\label{bib:refs}
+
+\appendix
+\input{sections/appendices/AppendixA}
+\input{sections/appendices/AppendixB}
+
+\end{document}
+

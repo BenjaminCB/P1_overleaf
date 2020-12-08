@@ -1,0 +1,153 @@
+\section{Implementation}
+In this section we will be going over the implementation process for our program. We will be documenting some of the choices that have been made throughout the development process.
+
+\subsection{Time slot storage}
+One of the things we needed to figure out how to handle was storage of the time slots that we load from the input file. Unfortunately we do not always know how many time slots exist for each team as such we can not simply allocate a predetermined amount of memory.
+
+To solve this we decided to implement a dynamically allocated expansible array. For this array we needed a few different functions. Firstly we needed to create and initialise a new array, this includes allocating storage for a given amount of elements. Secondly we want to be able to easily add an element to the end of the array. This would also include expanding the array when there is insufficient space available, which leads to the third function, reallocation and copying of elements. Lastly we need to be able to free the memory.
+
+In order to make this possible we want to track the amount of elements currently in the array, along with amount of elements that can be stored in the array. We have implemented this as a data structure as seen in listing \ref{lst:struct-tslist}.
+\begin{lstlisting}[caption={Definition of the list structure},label={lst:struct-tslist},language=C]
+    typedef struct {
+        /* The total amount of elements that
+           can be stored */
+        size_t capacity;
+        
+        /* The amount of elements currently
+           stored in the array */
+        size_t length;
+        
+        /* A pointer to the memory where the
+           elements are stored */
+        Timeslot* storage;
+    } TsList;
+\end{lstlisting}
+With this in mind we have declared the four aforementioned functions as seen in listing \ref{lst:funcs-tslist}. All of the functions, with the exception of \verb|tsListNew|, takes a reference to an existing \verb|TsList|. Both \verb|tsListNew| and \verb|tsListRealloc| takes a value of type \verb|size_t|, which is used for specifying the capacity of the list.
+\begin{lstlisting}[caption={Declarations of TsList functions.},label={lst:funcs-tslist},language=C]
+    /* Reallocates and copies the list storage. */
+    void tsListRealloc(TsList*, size_t);
+
+    /* Creates and initialises the list. */
+    TsList tsListNew(size_t);
+
+    /* Pushes an element to the end of the list. */
+    size_t tsListPush(TsList*, Timeslot);
+
+    /* Frees the memory used by the list. */
+    void tsListFree(TsList*);
+
+\end{lstlisting}
+
+\subsection{Reading data into the time slots}
+We will have an array of time slot lists, where each time slot list represents a team at Siemens Gamesa. We will create a new struct that holds a time slot list and the anticipated hours of each team. The first values we read into this struct will be the anticipated hours of each team, as they are the first to appear in the .csv file. We will check that we do not suddenly reach the end of the file, as that would mean the wrong input-file has been given to the function. If that is not the case, we go to the next part of the input:
+
+We skip forward 17 lines until we get to the actual dates and shifts. Here we read the date into a temporary time slot, with a function that separates the string in the form "dd-mm-yyyy" and into three unsigned integer values. Then we read the name of the weekday, and if it is a holiday. If it is a holiday then the holidays name also is loaded into the temporary time slot. We then check for each team if they have a shift that day, by checking if any hours are present. We then load the start and end time of the shift into the temporary time slot, and the amount of work hours converted to minutes are also loaded into the time slot. We then push the time slot to the appropriate teams time slot list. We then overwrite the start and end time and work hours with the next teams shift, and then push that time slot to the next teams time slot list and so forth for each team. When we reach the end of the line, we go to the next day, and reset the temporary time slot. 
+
+\subsection{Keeping track of allocated strings}
+While parsing the input file we have to allocate memory to store the strings in (in particular the names of SH-days). Whenever we allocate memory we of course have to free once we are done with it. One way to accomplish this would be to iterate through all of the time slots and freeing each string as we encounter them. This has the downside that we iterate through a large amount of time slots that do not have any strings associated with them. To minimize excess iterations we can store a reference to each string in a separate table. For this we have considered using either an  array or linked list to keep track of the references. The benefit of an array is that a new reference can be added in $O(1)$ time vs $O(n)$ for a linked list. But the downside is that we will have to either make assumptions about the amount of strings that needs to be stored or have to resize the array as we go, which can be rather expensive since it can result in copying the entire array. We assume that there is a relatively small amount of SH-day names and with this in mind we think that the ease of extension outweighs the cost of insertion and thus we have chosen to use a linked list.
+
+\subsection{Assigning a weight to each time slot}
+The weigh function is a function that takes four inputs. An array of time slot structs, the length of the array, an array of user defined constants and and index in the array. The function will then return an integer value for the time slot needed at that index in the array. This integer is a score for that time slot need, which represents how good it would be to give the workers time off in that time slot. This way we can remove the highest scoring day if they workers are working to much or add in the lowest scoring day if they are working too little. 
+
+The function itself is pretty simple. We have some specific days that we value higher than others, those being SH-days, vacation days and Saturdays, if the time slot is in one of those days we up the score by a certain amount. We also want to give a higher score to time slots closer to a SH-day and vacation day. 
+
+\begin{lstlisting}[caption={Weigh function},label={lst:weigh`},language=C]
+/*given an array of timeslots the length of the array and and an index, return the score of the timeslot of that index*/
+int weigh(Timeslot slots[], int slotsLen, char* modifiers[], int slotIndex) {
+    /*the constant scores and multipliers should optionally be changed by flags*/
+    int score = 0, 
+        scanned_modifiers[] = {500, 50, 200, 2, 1},
+        isShDay = ((slots + slotIndex)->editState == ShDay),
+        isVacationDay = ((slots + slotIndex)->editState == Vacation),
+        isSaturday = ((slots + slotIndex)->weekday == Saturday);
+
+    /*if we have gotten any flags specifying values for the modifiers scan them and assign the value*/
+    for (int i = 0; i < 5; i++) {
+        if (modifiers[i] != NULL) {
+            sscanf(modifiers[i], "%d", &scanned_modifiers[i]); 
+        }
+    }
+
+    /*up the multiplier if it is a special day*/
+    if (isShDay) score += scanned_modifiers[0];
+    if (isVacationDay) score += scanned_modifiers[1];
+    if (isSaturday) score += scanned_modifiers[2];
+
+    /*add the scores based on our criterias*/
+    if (!isVacationDay) score -= scanned_modifiers[3] * nDaysTill(slots, slotsLen, slotIndex, Vacation);
+    if (!isShDay) score -= scanned_modifiers[4] * nDaysTill(slots, slotsLen, slotIndex, ShDay);
+
+    return score;
+}
+\end{lstlisting}
+The function starts of by initializing an array of modifiers with default values for the previously mentioned constants. It then initializes three boolean values that check for whether it is a Saturday, SH-day and vacation day. Then we read the user defined modifiers if there are any. After reading the modifiers we check for all all the specific days and add to the score if it is any or multiple of them. We then subtract from the score based on the modifiers and how many days there are to a specific day. This is done using the nDaysTill function. Once that is done we can return the score.
+
+\subsubsection{Finding the next day of a specific type}
+The nDaysTill function takes four parameters. Three of which are the same as the weigh function and then an integer which will represent a specific day from our editState enumerator. The function will then return the number of days from the day of the time slot at the index to the closest day which has the given editState. 
+
+We start the function by initializing three variables. All three being integers, the first is number of days, the second being the index before our parameter slotIndex and the last being the index after the aforementioned slotIndex. 
+
+In the function there is an infinite for loop which contains three if statements. In the first we check whether i is bigger than or equal to zero. If that is the case we check to see if the time slot is on the day that we are looking for. If it is we find the number of days between the time slot at index slotIndex and the time slot at i, then we break out of the loop. If it is not the day we are looking for we subtract one from i. This means we are going further back in the array of time slots. In the second if statement we do pretty much the same except we are now going forward in the array, meaning we check time slots at later dates instead of earlier dates. In the last if statement we check to see if both index variables are out of the array bounds. If they are it means that there are not any time slots on the specific day that we are looking for, and we then break out of the loop.
+
+In the end we return the number of days or minus one if we do not find the day we were looking for.
+
+\subsubsection{Finding the number of days between two dates}
+The daysBetweenDates function takes two date structs and returns the number of days between them. The function also assumes that the first parameter is a date before the second parameter. The function has a single variable, that being the number of days. We run a while loop until the days, months and years are the same for both of our parameters. While we are in the loop we use the tomorrow function that takes a date struct as an input and returns the the day after that. We assign the day after our first parameter to our first parameter. We then add one to the number of days. The exit condition for the loop is the the two dates have become equal. Once we are out of the loop we can return the number of days. 
+
+\subsection{Criteria}
+The user criteria is an optional file used as input to specify if a certain team is supposed to work on a given day, we achieve this by changing the weight according to whether they should work or not. we have specified the extra file so it can also be made using excel or edited directly as a .csv file. The format of this file is as follows:
+\begin{lstlisting}[caption={Example Criteria.}]
+    9/1/2020 ;Y;PrimoOne
+    12/3/2020 ;N;PrimoTwo
+\end{lstlisting}
+The first part is the date that the criteria is about, the next part is a character Y or N to signify whether they should work on that particular day, the last part is the team this applies to.
+
+\subsection{Output .csv file generation}
+
+The output file is as mentioned before a .csv file. Luckily a .csv file is just a formatted text file, using commas or semicolons as separators. This means that we can just write everything out, making sure to place the correct commas or semicolons. 
+
+We start out with the line of code seen in listing \ref{lst:Output_header}. This code block generates information for the final schedule, telling the workers when the schedule is in effect.
+
+\begin{lstlisting}[caption={Writing of header},label={lst:Output_header},language=C]
+fprintf(file, "Fast skifteholdsplan i perioden 
+%s %d - %s %d for timeloennede medarbejedere paa 144 timer
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n",
+monthNumberToString(tsd->timeslotList.storage[0].date.month),
+tsd->timeslotList.storage[0].date.year,
+monthNumberToString(tsd->timeslotList.storage
+[tsd->timeslotList.length - 1].date.month),
+tsd->timeslotList.storage[tsd->timeslotList.length - 1].date.year);
+\end{lstlisting}
+
+After this we need to print out twice. Once for each half of the schedule, since it is divided into two equally big 6 month periods, instead of a long line of 12 months in a row. Therefore we call the function to print out the specific dates twice. First time we call it, it goes through the first six months, and checks and prints what need to be printed. After the first time we return a integer. This integer is how many days are in the first six months. We do not always know this value, as we could have different starting dates (e.g we do not start the schedule in September, or we have a leap year), and therefore different amount of days to go forward 6 months. 
+
+When we have the return value, we use it to call the function a second time, this time giving it our returned int, and therefore printing the months 7-12 intead of 1-6 as before.
+
+the code
+\begin{lstlisting}[caption={Printing of dates},label={lst:Date_print},language=C]
+fprintf(file, "%c %d,%s, ", weekdayToChar(tsd->timeslotList.storage[i + days].weekday), i + 1,
+tsd->timeslotList.storage[i + days].shName ? tsd->timeslotList.storage[i + days].shName : " ");
+
+fprintf(file, "%c,", tsd[0].timeslotList.storage[i + days].workTime ? 'P' : ' ');
+fprintf(file, "%c,", tsd[1].timeslotList.storage[i + days].workTime ? 'P' : ' ');
+fprintf(file, "%c,", tsd[2].timeslotList.storage[i + days].workTime ? 'U' : ' ');
+fprintf(file, "%c,", tsd[3].timeslotList.storage[i + days].workTime ? 'U' : ' ');
+
+\end{lstlisting}
+                
+
+% Priorities. Nikolaj + Rasmus
+
+% Weighing fixing and implementation. Benjamin.
+
+% implementation input. Mikkel + Rasmus
+
+% Output table fixing and implementation. Marcus + Lohse
+
+% criteria option wishes making, fixing and implementation. Flemming
+
+% GUI making, fixing and implementation. Mærsk
+
+
+
+

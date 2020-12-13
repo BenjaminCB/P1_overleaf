@@ -1,22 +1,62 @@
 \section{Source code structure}
 In the following section we will describe how the structure of our program will be. The program will be written in the language C, which means we can split our programs directory into separate C source files (\verb|.c|), and link them together using header files (\verb|.h|). In each of the following subsections, we will describe each file, both C source files, and header files.
 
+\subsection{Project structure}
+The projects directory is structured in the way that we have our main script (\verb|main.c|) in the main directory, and all of our include-scripts is located in a sub-directory called \verb|includes/|. \verb|main.c| is dependent on all of our files located in \verb|includes/|, whereas they are not completely dependent on each other, with the exception of \verb|types.c|, which is where our data types are, and therefore essential for everything in the program. Figure [REF] illustrates our dependencies and and how they include each other.
+
+%[INSERT ILLUSTRATION HERE]
+
+\subsection{Git}
+We have used git for our version control on the platform Gitlab. With git, we have been able to make branches, where we can each work on our assigned part of the project, without potentially messing with the other group members code, and time. 
+
+\subsection{Build \& unit-test process}
+For our project we decided to make use of a program called CMake in order to simplify our build process. CMake is a cross-platform, compiler independent build configuration system. Specifically for our project it makes it easier to ensure that everyone is using the correct build options and that the individual binaries are linked correctly.
+
+\begin{figure}[ht!]
+    \centering
+    \begin{tikzpicture}
+        \node (core) at (2,0) {core\_lib};
+        \node (xheader) at (0,1) {header.o};
+        \node (xfooter) at (0,2) {footer.o};
+        \node (xml) at (2,2) {xml\_lib};
+        \node (app) at (4,1) {p1\_project};
+        \node (tests) at (4,0) {tests};
+        
+        \draw [arrow] (core) -- (tests);
+        \draw [arrow] (core) -- (app);
+        \draw [arrow] (xml) -- (app);
+        \draw [arrow] (xheader) -- (xml);
+        \draw [arrow] (xfooter) -- (xml);
+        
+    \end{tikzpicture}
+    \caption{A dependency graph showing the relations between each of the build targets. The test target is used as a stand-in for all test targets. The p1\_project is the main program executable.}
+    \label{fig:BuildGraph}
+\end{figure}
+
+Our build is split up into three primary targets (one executable and two libraries) and a number test targets (target in the context of a CMake build refers to a binary executable or library that is to be built). The primary executable is the final program executable. This executable target consist solely of our \verb|main.c| file, which on its own does nothing more than open the input and output files and free up resources. All of the actual program functionality comes from the two libraries that are linked together with the executable. The first of these libraries is called \verb|core_lib|, as the name implies it contains all of the core functionality of the program. The purpose of splitting the functionality away from the primary executable is to make the testing process easier. Instead of having to specify all of the files that are needed to run the test, one can simply specify that the test executable has to be linked to the \verb|core_lib| library.
+
+The second library is \verb|xml_lib| this library handles writing output when the program is running in XML mode. Unlike the other targets this target contains more than just code files. The files in question are \verb|footer.o| and \verb|header.o| these files are linked as custom targets and are simply text files (containing XML data) converted to binary object files such that they can be embedded directly into the binary and be accessed as a variable within the code.
+
+In addition to managing the build process CMake can also be used to manage testing. When using the test system in CMake each test is an individual executable target. Whether the test was successful is determined by the exit code of the executable. This makes setting up a test very easy since all you have to do is use the \verb|assert| function or return an appropriate exit code.
+
+
 \subsection{main.c}
-The \verb|main.c| file will acts as our main file, where we use the functions and data types from the other files to solve our problem and make a work schedule in the right format. This file is the only one to include header files for all of the other files in our program, since it is the main file and needs the attributions from all of the other files.
+The \verb|main.c| file will act as our main file, where we use the functions and data types from the other files to solve our problem and make a work schedule in the right format. This file is the only one to include header files for all the other files in our program, since it is the main file and needs the attributions from all the other files.
 
 \subsection{types.c/.h}
-The \verb|types.c| will be containing the structs and data types that we will be using in our program. This file will be used as a header in most, if not all, other files.
+The \verb|types.c| will contain the structs and data types that we will be using in our program. This file will be used as a header in most, if not all, other files.
 
 \subsection{input.c/.h}
 The \verb|input.c| file will contain the code required to scan the initial work schedule (Figure \ref{fig:Schedule no fix}), and insert it into the data types made in \verb|types.c|, which means it needs to include a header file, pointing towards \verb|types.c|.
 
 \subsection{outputwriter.c/.h}
-The \verb|outputwriter.c| file will contain the code that writes all of our data, processed in \verb|main.c|, out to a "Comma Separated Varia
-ble" file, in the right format, as seen in Figure \ref{fig:Schedule formated}.
+The \verb|outputwriter.c| file will contain the code that writes all of our data, processed in \verb|main.c|, out to a "Comma Separated Variable" file, in the right format, as seen in Figure \ref{fig:Schedule formated}.
 
 \subsection{gen.c/.h}
-The \verb|gen.c| file will be used to generate most, if not all of the schedule. This file will also be dependant on the \verb|types.c| as a header file.
+The \verb|gen.c| file will be used to generate most, if not the whole schedule. This file will also be dependent on the \verb|types.c| as a header file.
+
+\subsection{criteria.c/h}
+the \verb|criteria.c| files purpose is to provide the user some criteria, regarding the generation of the workschedule. In a simple \verb|.csv| file, the user will have the option to make some requirements, specifying if a team should work or not work on a given day.
 
 \subsection{Illustration}
-All of the dependencies can be explained in an illustration
-
+All the dependencies can be explained in an illustration

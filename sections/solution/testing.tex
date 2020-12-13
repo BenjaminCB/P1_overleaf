@@ -1,3 +1,71 @@
 \section{Testing}
+In this section we will be going over some of the ways we have tested the program to ensure that it works as expected. This also includes checking to ensure the program does not have any unwanted side effects such as memory leaks.
 
-To test the reliability of the program we have made different text cases to check if the output program is created reliably.
+\subsection{User test}
+A user test of the program was conducted during the development process. The test consisted of our \siemens contact following the instructions given to them via a short guide that we had written for them, that we sent them along with the program. The test took around eleven minutes, which is pretty close to how long we wanted the program to take to use, which is about ten minutes. Furthermore, it should be taken into account that it was a first time user who spent eleven minutes on the task, so they also had to read the manual at the same time. A more experienced user would most likely be able to do it much faster.
+
+Some of the problems that the user stumbled into while using the program were
+\begin{itemize}
+    \item Outputting to the correct .csv file type (with semicolons)
+    \item The act of opening the program with the file, by dragging the file onto the program, which is a action not usually done by normal users of Windows.
+    \item Having to manually adjust the output .csv file in excel, coloring the keys etc
+\end{itemize}
+
+It was therefore clear to us that we had to make some improvements regarding the user friendliness of the program and the instruction manual. Since then we have done exactly that by adjusting the instruction manual to be more clear when it comes to the previously mentioned areas.
+
+\subsection{Checking for memory leaks}
+In order to test our program for memory leaks we made use of a tool called Valgrind. Valgrind is a runtime analysis tool rather than a static analysis. This means that the actual running executable is analysed while it runs rather than the source code being analysed before a executable has even been generated. This also means that only the parts of the program that were actually executed throughout the duration of the run time will be analysed. Because of this we have to be aware of the various paths the program may take at run time.
+
+\begin{figure}[ht!]
+    \centering
+    \begin{tikzpicture}[node distance=2.5cm,font=\scriptsize]
+        \node (start) [startstop] {...};
+        \node (pout) [decision, right of=start, text width=1.2cm, aspect=1.5] {Output specified?};
+        
+        \node (gen) [process, above right of=pout, text width=1.5cm] {Generate file path};
+        \node (open) [process, below right of=gen, text width=1.5cm, xshift=0.5cm] {Create file};
+        \node (stop) [startstop, right of=open] {...};
+        
+        \draw [arrow] (start) -- (pout);
+        \draw [arrow] (pout) -- node[anchor=south] {yes} (open);
+        \draw [arrow] (pout) -- node[anchor=east] {no} (gen);
+        \draw [arrow] (gen) -- (open.north west);
+        \draw [arrow] (open) -- (stop);
+    \end{tikzpicture}
+    \caption{A flow chart illustrating how the program branches differently based on the presence of a parameter.}
+    \label{fig:ProgramBranching}
+\end{figure}
+
+Specifically for our program the user has the option to supply a name for the resulting output file. When this option is used the program can skip directly to creating the file rather than having to first generate a name based on the name of the input file. This example can be seen illustrated in figure \ref{fig:ProgramBranching}. In order to maximise program coverage for the analysis we want to avoid specifying a path for the output file since if specified the branch, where the file path is generated, would not be run.
+
+This specific example is particularly relevant in this case since it happened to contain our programs' only memory leak. The memory leak was caused due to the pointer to the file path being stored in the same variable regardless of whether it was passed in as a program argument or dynamically allocated as part of the generation process. This made it impossible to determine if the path needed to be freed manually. To fix this we added an extra variable which we set before we generate the path string from the input file path. This variable is then used to check if the path needs to be freed once the program has finished.
+
+\subsection{Manual testing}
+One way to test functions and code while in the development phase is to do manual testing. It is very simple in the sense that it does not require any external tools. This means that it can be a lot more time consuming, because you have to make every test from the ground up, but that also means that it is very flexible, which is why we have done it so much. The goal of doing tests manually is to see if our functions behave as expected. This is done by giving the functions inputs that we think could give it problems, in many cases these are edge cases and special cases to make sure our program can handle even the more extreme scenarios.
+
+One of the very simple manual tests we did was on the "tomorrow function". Given a date this function should return the next date. For this function the determined edge cases were when going from the end of a month to the beginning of a now month (inputting 31-01-2020 should return 01-02-2020), when going from the end of the year to the beginning of the new year (inputting 31-12-2020 should return 01-01-2021), and the special case was whether to include February 29th or not. The general behaviour of the function also had to be tested. To test all this we printed a Little more than a year in the terminal and checked that was as it was supposed to, in essence we had to see if we had printed a calendar in the terminal. The code can be seen on Listing \ref{lst:tomorrow_test}. A thing to note is that this test was made before the date struct had the week number as a member. 
+
+\begin{lstlisting}[caption={tomorrow function testing.}, label={lst:tomorrow_test}, language=c]
+/*tomorrow test*/
+Date tomorrowTest = {1, 1, 2020};
+for (int i = 0; i < 400; i++) {
+    printf("D: %d, M: %d, Y: %d\n", 
+           tomorrowTest.day,
+           tomorrowTest.month,
+           tomorrowTest.year);
+    tomorrowTest = tomorrow(tomorrowTest);
+}
+\end{lstlisting}
+
+With this test we got the behaviour we wanted and everything in the test went pretty well, except for leap years since that can change from year to year and the other things can not. That is not a major problem since the checking for leap years is a function itself which can also be tested. 
+
+Manual testing can also be used to test more complex functions and that is what we did when we wanted to check the program output i.e the .csv file. Here it is pretty hard to see if everything is exactly how it should be, but it is very useful to find mistakes that need to be fixed. What ended up happening was that we would find something wrong with the schedule, fix it, and then find a new problem. We would iterate through this, slowly making the schedule better by fixing bugs, logic flows, and miscommunications. Some examples of what we had to fix these.
+
+\begin{itemize}
+    \item Weighting did not take work hours into account, which resulted in 24/7 working a couple of months, then having time off the rest of the year.
+    \item When putting in the SH tag in a cell we did not show who had to work that day.
+    \item Vacation days could get the RM tag, because the one who made the weighing function assumed that a vacation day would have zero hours of work time.
+\end{itemize}
+
+We had some more things that needed to be fixed before we could be happy with the final result of the schedule, but the process was basically the same. We also tried making some input that we would work as edge cases, one case where no one was working and one where everybody was working all the time. It was interesting to see how the program would act, but this was not what is was build for so the outcome did not help us all that much. Afterwards we found it hard to make some proper edge cases since the purpose of the program has always been to take a rough estimate of a schedule as an input. Therefore, it was hard to make an edge- or special case what also seemed realistic. 
+

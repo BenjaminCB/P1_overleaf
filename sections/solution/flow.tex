@@ -1,9 +1,22 @@
 \section{Program Description}
-In this section we will be going over how the program as a whole will function using flowcharts to illustrate the flow of the program. In the below figure (\ref{fig:Main_Flowchart}) the overall flow of the program can be seen. As we mentioned in the requirements section the program will be accepting a \verb|.csv| file. This input file first has to be read and parsed in order to convert the file into a data structure that we can use within our program. Once the input file has been processed we need to determine if any changes are necessary. This is done by comparing the expected work time (from the input file) with the work time that has been scheduled so far.
+In this section we will be going over how the program as a whole will function, using flowcharts to illustrate the flow of the program. In the below figure (\ref{fig:Main_Flowchart}) the overall flow of the program can be seen. As we mentioned in the requirements section the program will be accepting a \verb|.csv| file. This input file first has to be read and parsed in order to convert the file into a data structure that we can use within our program. Once the input file has been processed we need to determine if any changes are necessary. This is done by comparing the expected work time (from the input file) with the work time that has been scheduled so far.
+
+%fix later
+\if1
+\begin{tikzpicture}[node distance=2cm,font=\scriptsize]
+    \node (start) [startstop] {Start};
+    \node (read) [process, right of=start, text width=1.5cm] {Read the input file};
+    \node (proc) [process, right of=read, text width=1.5cm] {Process the data};
+    \node (need) [decision, right of=proc, text width=2cm, aspect=3] {Is shift change needed?};
+    \draw [arrow] (start) -- (read);
+    \draw [arrow] (read) -- (proc);
+    \draw [arrow] (proc) -- (need);
+\end{tikzpicture}
+\fi
 
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=\textwidth]{media/Flowcharts/General Flowchart.png}
+    \includegraphics[width=\textwidth]{media/Flowcharts/General flowchart.png}
     \caption{Flowchart of the program flow.}
     \label{fig:Main_Flowchart}
 \end{figure}
@@ -15,12 +28,12 @@ As mentioned the weighting function will be used to determine which time slot sh
 \clearpage
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=0.4\textwidth]{media/Flowcharts/weight_flow.png}
+    \includegraphics[width=0.8\textwidth]{media/Flowcharts/weight_flow.png}
     \caption{Weighting function flowchart.}
     \label{fig:weighting_flow}
 \end{figure}
 
-The most important part of the function is the five if-statements and the code being run if these turn out to be true. In the first three we check for whether or not it is a specific day. If it is we add to the score. This means that time slots in these days they will get a better score. Then we check for whether or not it is an sh-day or vacation day in the last two if-statements. If it is not an sh-day we calculate the number of days too the closest sh-day. We then multiply the number of days with a constant and subtract that from the score. The same process is done for vacation days. 
+The most important part of the function is the four if-statements and the code being run if these turn out to be true or false in the case of the first three. The first if statement checks to see if the exceed the amount of work hours we can have in a week. If, we do then the time slot needs to have a really high score because we can not have to many hours in a week. Does it turn out to e false we add to the scored based on the amount of hours in the week. In the next three statements we check whether or not it is a specific type of day. If it is we add to the score. This means that time slots on these days will get a better score. The middle two if statements also have an else condition. If it is not an SH-day we calculate the number of days too the closest SH-day. We then multiply the number of days with a constant and subtract that from the score. The same process is done for vacation days. 
 
 To calculate the aforementioned number of days we use the nDaysTill function. A flowchart for that con be seen on Figure \ref{fig:flow_nDaysTill}.
 
@@ -32,4 +45,4 @@ To calculate the aforementioned number of days we use the nDaysTill function. A 
     \label{fig:flow_nDaysTill}
 \end{figure}
 
-This function starts off by making two index variables (i and j) based on an index it gets as a parameter. The first is going to go backwards in a time slot array and the other is going to go forwards in the same array. We then go into an infinite loop. In the loop there are three if statements, the first checks whether i is out of the array bounds, the second does the same but for j and the last checks both the variables. If the first if statement is true we then check to see if the time slot at index i is on the day that we are looking for, if it is we calculate the number of days between the time slot at the index given as a parameter and the time slot at index i. We then break out of the loop and return the number of days. If it turns out that it is not the day we are looking for we subtract one from i and go back to the for loop right after the first if statement. The second if statement has the same process as the first except this time we check j. Lastly we check to see if both index variables are out of the array bounds, and if they are we break out of the loop and return -1.
+This function starts off by making two index variables (i and j) based on an index it gets as a parameter. The first is going to go backwards in a time slot array and the other is going to go forwards in the same array. We then go into an infinite loop. In the loop there are three if statements, the first checks whether i is out of the array bounds, the second does the same but for j and the last checks both the variables. If the first if statement is true we then check to see if the time slot at index i is on the day that we are looking for, if it is we calculate the number of days between the time slot at the index given as a parameter and the time slot at index i. We then break out of the loop and return the number of days. If it turns out that it is not the day we are looking for we subtract one from i and go back to the for loop right after the first if statement. The second if statement has the same process as the first except this time we check j. Lastly we check to see if both index variables are out of the array bounds, and if they are we break out of the loop and return -1.p
